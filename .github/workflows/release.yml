@@ -1,6 +1,7 @@
 name: Build and Release APK
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -27,6 +28,17 @@ jobs:
         with:
           channel: 'stable'
 
+      - name: Create dummy .env file
+        working-directory: ./smart_campus_navigation_system
+        env:
+          SUPABASE_URL: "${{ secrets.SUPABASE_URL }}"
+          SUPABASE_ANON_KEY: "${{ secrets.SUPABASE_ANON_KEY }}"
+          MAPTILER_API_KEY: "${{ secrets.MAPTILER_API_KEY }}"
+        run: |
+          echo "SUPABASE_URL=$SUPABASE_URL" > .env
+          echo "SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY" >> .env
+          echo "MAPTILER_API_KEY=$MAPTILER_API_KEY" >> .env
+
       - name: Get dependencies
         working-directory: ./smart_campus_navigation_system
         run: flutter pub get
@@ -40,7 +52,7 @@ jobs:
         id: extract_version
         working-directory: ./smart_campus_navigation_system
         run: |
-          version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          version=$(grep '^version: ' pubspec.yaml | tr -d '\r' | cut -d ' ' -f 2 | cut -d '+' -f 1)
           echo "VERSION=$version" >> $GITHUB_OUTPUT
 
       - name: Create Release

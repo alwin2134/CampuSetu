@@ -16,6 +16,7 @@ import '../models/campus_edge.dart';
 import '../services/supabase_service.dart';
 import '../services/routing_service.dart';
 import '../services/update_service.dart';
+import 'package:ota_update/ota_update.dart';
 import '../theme.dart';
 import 'admin_map_screen.dart';
 import '../widgets/event_details_sheet.dart';
@@ -308,7 +309,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             }
             
             final event = snapshot.data!;
-            if (event.status == OtaStatus.DOWNLOADING) {
+            if (event.status == OtaStatus.DOWNLOADING || event.status.name == 'DOWNLOADING' || event.status.name == 'downloading') {
               return AlertDialog(
                 title: const Text('Downloading Update'),
                 content: Column(
@@ -322,7 +323,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ],
                 ),
               );
-            } else if (event.status == OtaStatus.INSTALLING) {
+            } else if (event.status == OtaStatus.INSTALLING || event.status.name == 'INSTALLING' || event.status.name == 'installing') {
               return const AlertDialog(
                 title: Text('Installing'),
                 content: Text('Please wait while the update is being installed...'),
