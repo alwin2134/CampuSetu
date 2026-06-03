@@ -1,0 +1,37 @@
+node_modules/
+.env
+*.env
+.env.*
+.DS_Store
+*.log
+.vscode/
+.idea/
+
+# Flutter specific ignores
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+**/coverage/
+
+# Android specific ignores
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+**/android/.gradle/
+**/android/local.properties
+**/android/app/build/
+
+# iOS specific ignores
+**/ios/Flutter/.last_build_id
+**/ios/Pods/
+**/ios/.symlinks/
+
+# MacOS specific ignores
+**/macos/Flutter/ephemeral/
+
+# Desktop specific ignores
+**/linux/flutter/ephemeral/
+**/windows/flutter/ephemeral/
