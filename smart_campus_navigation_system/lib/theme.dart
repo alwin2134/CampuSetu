@@ -14,10 +14,13 @@ class AppTheme {
 
   // ── Neutral Palette ───────────────────────────────────────────────────────
   static const Color ink900 = Color(0xFF0F172A);
+  static const Color ink800 = Color(0xFF1E293B);
   static const Color ink700 = Color(0xFF334155);
+  static const Color ink600 = Color(0xFF475569);
   static const Color ink500 = Color(0xFF64748B);
-  static const Color ink300 = Color(0xFFCBD5E1);
   static const Color ink400 = Color(0xFF94A3B8);
+  static const Color ink300 = Color(0xFFCBD5E1);
+  static const Color ink200 = Color(0xFFE2E8F0);
   static const Color ink100 = Color(0xFFF8FAFC); // Slightly brighter for Maps feel
   static const Color white = Colors.white;
 

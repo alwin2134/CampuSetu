@@ -48,17 +48,56 @@ class UpdateService {
 
         if (apkUrl == null) return UpdateInfo(hasUpdate: false);
 
-        // Parse remote build number
-        final parts = tagName.split('+');
-        if (parts.length != 2) return UpdateInfo(hasUpdate: false);
-        final remoteBuildNumber = int.tryParse(parts[1]) ?? 0;
-
-        // Get local build number
+        // Get local version and build number
         final packageInfo = await PackageInfo.fromPlatform();
-        final localBuildNumberStr = packageInfo.buildNumber;
-        final localBuildNumber = int.tryParse(localBuildNumberStr) ?? 0;
+        final localVersionStr = packageInfo.version;
+        final localBuildNumber = int.tryParse(packageInfo.buildNumber) ?? 0;
 
-        if (remoteBuildNumber > localBuildNumber) {
+        // Parse remote version and build number (e.g., "v1.2.3+15" or "1.2.3")
+        String remoteVersionStr = tagName;
+        int remoteBuildNumber = 0;
+        
+        if (remoteVersionStr.contains('+')) {
+          final parts = remoteVersionStr.split('+');
+          remoteVersionStr = parts[0];
+          remoteBuildNumber = int.tryParse(parts[1]) ?? 0;
+        }
+        
+        if (remoteVersionStr.startsWith('v') || remoteVersionStr.startsWith('V')) {
+          remoteVersionStr = remoteVersionStr.substring(1);
+        }
+
+        bool hasUpdate = false;
+
+        // Compare semantic version parts (Major.Minor.Patch)
+        final localParts = localVersionStr.split('.').map((s) => int.tryParse(s) ?? 0).toList();
+        final remoteParts = remoteVersionStr.split('.').map((s) => int.tryParse(s) ?? 0).toList();
+
+        // Pad arrays to same length (minimum 3)
+        while (localParts.length < 3) {
+          localParts.add(0);
+        }
+        while (remoteParts.length < 3) {
+          remoteParts.add(0);
+        }
+
+        for (int i = 0; i < 3; i++) {
+          if (remoteParts[i] > localParts[i]) {
+            hasUpdate = true;
+            break;
+          } else if (remoteParts[i] < localParts[i]) {
+            break;
+          }
+        }
+
+        // If version strings are exactly equal, fall back to comparing build number
+        if (!hasUpdate && remoteParts[0] == localParts[0] && remoteParts[1] == localParts[1] && remoteParts[2] == localParts[2]) {
+           if (remoteBuildNumber > localBuildNumber) {
+             hasUpdate = true;
+           }
+        }
+
+        if (hasUpdate) {
           return UpdateInfo(
             hasUpdate: true,
             downloadUrl: apkUrl,

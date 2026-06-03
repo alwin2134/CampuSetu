@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -43,8 +42,9 @@ class CampusBottomSheetState extends State<CampusBottomSheet> {
   final DraggableScrollableController _controller = DraggableScrollableController();
   bool _isExpanded = false;
 
-  double _minSize = 0.12;
-  double _midSize = 0.42;
+  // Static sizes — must NOT be mutated inside build()
+  static const double _minSize = 0.12;
+  static const double _midSize = 0.42;
   static const double _maxSize = 0.92;
 
   @override
@@ -82,18 +82,13 @@ class CampusBottomSheetState extends State<CampusBottomSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final screenHeight = MediaQuery.of(context).size.height;
-    // Dynamically calculate sizes to ensure the top peek is always reachable on small screens
-    _minSize = math.max(0.12, 100 / screenHeight);
-    _midSize = math.max(0.42, 350 / screenHeight);
-
     return DraggableScrollableSheet(
       controller: _controller,
       initialChildSize: _midSize,
       minChildSize: _minSize,
       maxChildSize: _maxSize,
       snap: true,
-      snapSizes: [_minSize, _midSize, _maxSize],
+      snapSizes: const [_minSize, _midSize, _maxSize],
       builder: (context, scrollController) {
         return CampusFeedPanel(
           scrollController: scrollController,
@@ -109,11 +104,11 @@ class CampusBottomSheetState extends State<CampusBottomSheet> {
           onNavigateTap: widget.onNavigateTap,
           onEventsTap: () {
             widget.onEventsTap?.call();
-            if (_controller.size < _midSize) snapTo(_midSize);
+            if (_controller.isAttached && _controller.size < _midSize) snapTo(_midSize);
           },
           onBuildingsTap: () {
             widget.onBuildingsTap?.call();
-            if (_controller.size < _midSize) snapTo(_midSize);
+            if (_controller.isAttached && _controller.size < _midSize) snapTo(_midSize);
           },
           onAboutTap: widget.onAboutTap,
         );
@@ -121,6 +116,7 @@ class CampusBottomSheetState extends State<CampusBottomSheet> {
     );
   }
 }
+
 
 class CampusFeedPanel extends StatefulWidget {
   final ScrollController? scrollController;
@@ -186,7 +182,6 @@ class _CampusFeedPanelState extends State<CampusFeedPanel> {
       ),
       child: CustomScrollView(
         controller: widget.scrollController,
-        physics: const BouncingScrollPhysics(),
         slivers: [
           // ── Drag Handle + Header ──────────────────────────────────
           if (widget.isDraggableSheet)

@@ -125,43 +125,43 @@ class DirectionsFeedPanel extends StatelessWidget {
           ),
         ] : null,
       ),
-      child: Column(
-        children: [
+      child: CustomScrollView(
+        controller: scrollController,
+        slivers: [
           // ── Drag handle ────────────────────────────────────────────────
           if (isDraggableSheet)
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: onHeaderTap,
-              child: _DirectionHeader(
-                route: route,
-                destinationName: destinationName,
-                originName: originName,
-                isExpanded: isExpanded,
-                onCancel: onCancel,
+            SliverToBoxAdapter(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onHeaderTap,
+                child: _DirectionHeader(
+                  route: route,
+                  destinationName: destinationName,
+                  originName: originName,
+                  isExpanded: isExpanded,
+                  onCancel: onCancel,
+                ),
               ),
             )
           else
-            Container(
-              padding: const EdgeInsets.only(top: 24),
-              child: _DirectionHeader(
-                route: route,
-                destinationName: destinationName,
-                originName: originName,
-                isExpanded: true,
-                onCancel: onCancel,
+            SliverToBoxAdapter(
+              child: Container(
+                padding: const EdgeInsets.only(top: 24),
+                child: _DirectionHeader(
+                  route: route,
+                  destinationName: destinationName,
+                  originName: originName,
+                  isExpanded: true,
+                  onCancel: onCancel,
+                ),
               ),
             ),
 
           // ── Steps list ─────────────────────────────────────────────────
-          Expanded(
-            child: CustomScrollView(
-              controller: scrollController,
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                // Section label
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
+          // Section label
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                     child: Row(
                       children: [
                         Container(
@@ -202,9 +202,6 @@ class DirectionsFeedPanel extends StatelessWidget {
                   child: SizedBox(height: MediaQuery.of(context).padding.bottom + 32),
                 ),
               ],
-            ),
-          ),
-        ],
       ),
     );
   }

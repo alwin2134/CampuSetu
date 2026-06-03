@@ -232,110 +232,282 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  // ── Auto-Updater ────────────────────────────────────────────────────────
+  // ── Auto-Updater ────────────────────────────────────────────────
   Future<void> _checkForUpdates(bool manualCheck) async {
     if (manualCheck) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Checking for updates...')),
+        SnackBar(
+          content: const Row(children: [
+            SizedBox(width: 2),
+            SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+            SizedBox(width: 12),
+            Text('Checking for updates…'),
+          ]),
+          backgroundColor: AppTheme.ink800,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 3),
+        ),
       );
     }
-    
+
     final updateInfo = await UpdateService.checkForUpdate();
-    
+
     if (!mounted) return;
-    
+
     if (updateInfo.hasUpdate && updateInfo.downloadUrl != null) {
       _showUpdateDialog(updateInfo);
     } else if (manualCheck) {
+      ScaffoldMessenger.of(context).clearSnackBars();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Your app is up to date!')),
+        SnackBar(
+          content: const Row(children: [
+            Icon(Icons.check_circle_rounded, color: Colors.white, size: 18),
+            SizedBox(width: 10),
+            Text('You’re on the latest version!'),
+          ]),
+          backgroundColor: AppTheme.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.all(16),
+        ),
       );
     }
   }
 
   void _showUpdateDialog(UpdateInfo updateInfo) {
-    showDialog(
+    final notes = (updateInfo.releaseNotes ?? '').trim();
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Update Available'),
-        content: Text('A new version (${updateInfo.versionName}) of CampuSetu is available.\n\n${updateInfo.releaseNotes ?? "Bug fixes and improvements."}'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Later'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _startUpdateDownload(updateInfo.downloadUrl!);
-            },
-            child: const Text('Download Now'),
-          ),
-        ],
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(ctx).padding.bottom + 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Drag handle
+            Center(
+              child: Container(
+                width: 40, height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.ink300,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Icon + title row
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    gradient: AppTheme.primaryGradient,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: AppTheme.shadowPrimary,
+                  ),
+                  child: const Icon(Icons.system_update_rounded, color: Colors.white, size: 28),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Update Available',
+                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppTheme.ink900)),
+                      const SizedBox(height: 3),
+                      Text(updateInfo.versionName ?? '',
+                        style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w600, fontSize: 13)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+
+            if (notes.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              const Text("What's new",
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14, color: AppTheme.ink700)),
+              const SizedBox(height: 8),
+              Container(
+                constraints: const BoxConstraints(maxHeight: 160),
+                child: SingleChildScrollView(
+                  child: Text(
+                    notes,
+                    style: const TextStyle(color: AppTheme.ink600, fontSize: 13, height: 1.5),
+                  ),
+                ),
+              ),
+            ],
+
+            const SizedBox(height: 24),
+
+            // Action buttons
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.pop(ctx),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      side: const BorderSide(color: AppTheme.ink300),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    child: const Text('Later', style: TextStyle(color: AppTheme.ink600, fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  flex: 2,
+                  child: FilledButton.icon(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _startUpdateDownload(updateInfo.downloadUrl!);
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    icon: const Icon(Icons.download_rounded, size: 18),
+                    label: const Text('Download Now', style: TextStyle(fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
   void _startUpdateDownload(String url) {
-    showDialog(
+    showModalBottomSheet(
       context: context,
-      barrierDismissible: false,
+      isDismissible: false,
+      enableDrag: false,
+      backgroundColor: Colors.transparent,
       builder: (ctx) {
-        return StreamBuilder(
+        return StreamBuilder<OtaEvent>(
           stream: UpdateService.downloadAndInstallUpdate(url),
           builder: (context, snapshot) {
+            String statusTitle = 'Preparing…';
+            String statusSub = 'Getting ready to download';
+            double? progress;
+            bool isError = false;
+            bool isDone = false;
+
             if (snapshot.hasError) {
-              return AlertDialog(
-                title: const Text('Update Failed'),
-                content: Text('Error: ${snapshot.error}'),
-                actions: [
-                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))
-                ],
-              );
+              isError = true;
+              statusTitle = 'Update Failed';
+              statusSub = snapshot.error.toString();
+            } else if (snapshot.hasData) {
+              final event = snapshot.data!;
+              final statusName = event.status.name.toUpperCase();
+              if (statusName == 'DOWNLOADING') {
+                final pct = double.tryParse(event.value ?? '0') ?? 0;
+                progress = pct / 100;
+                statusTitle = 'Downloading Update';
+                statusSub = '${pct.toStringAsFixed(0)}% complete';
+              } else if (statusName == 'INSTALLING') {
+                progress = 1.0;
+                statusTitle = 'Installing…';
+                statusSub = 'Almost there! Follow the on-screen prompt.';
+                isDone = true;
+              } else {
+                statusTitle = 'Status: ${event.status.name}';
+                statusSub = event.value ?? '';
+              }
             }
-            if (!snapshot.hasData) {
-              return const AlertDialog(
-                title: Text('Downloading Update'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('Starting download...'),
-                  ],
-                ),
-              );
-            }
-            
-            final event = snapshot.data!;
-            if (event.status == OtaStatus.DOWNLOADING || event.status.name == 'DOWNLOADING' || event.status.name == 'downloading') {
-              return AlertDialog(
-                title: const Text('Downloading Update'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    LinearProgressIndicator(
-                      value: event.value != null ? (double.tryParse(event.value!) ?? 0) / 100 : null,
+
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+              ),
+              padding: EdgeInsets.fromLTRB(24, 20, 24, MediaQuery.of(context).padding.bottom + 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40, height: 4,
+                      decoration: BoxDecoration(color: AppTheme.ink300, borderRadius: BorderRadius.circular(2)),
                     ),
-                    const SizedBox(height: 16),
-                    Text('${event.value}% Downloaded'),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Animated icon
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: isError
+                        ? AppTheme.danger.withValues(alpha: 0.1)
+                        : isDone
+                          ? AppTheme.success.withValues(alpha: 0.1)
+                          : AppTheme.primaryLight,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      isError ? Icons.error_outline_rounded
+                        : isDone ? Icons.check_circle_rounded
+                        : Icons.download_rounded,
+                      color: isError ? AppTheme.danger
+                        : isDone ? AppTheme.success
+                        : AppTheme.primary,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  Text(statusTitle,
+                    style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: AppTheme.ink900)),
+                  const SizedBox(height: 6),
+                  Text(statusSub,
+                    style: const TextStyle(color: AppTheme.ink500, fontSize: 13),
+                    textAlign: TextAlign.center),
+
+                  const SizedBox(height: 24),
+
+                  // Progress bar
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 10,
+                      backgroundColor: AppTheme.ink200,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        isError ? AppTheme.danger : AppTheme.primary,
+                      ),
+                    ),
+                  ),
+
+                  if (isError) ...[
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FilledButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppTheme.danger,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: const Text('Close', style: TextStyle(fontWeight: FontWeight.w700)),
+                      ),
+                    ),
                   ],
-                ),
-              );
-            } else if (event.status == OtaStatus.INSTALLING || event.status.name == 'INSTALLING' || event.status.name == 'installing') {
-              return const AlertDialog(
-                title: Text('Installing'),
-                content: Text('Please wait while the update is being installed...'),
-              );
-            }
-            
-            return AlertDialog(
-              title: const Text('Update'),
-              content: Text('Status: ${event.status.name}'),
-              actions: [
-                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))
-              ],
+                ],
+              ),
             );
           },
         );
@@ -769,62 +941,66 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
           // ── Bottom sheet: directions when routing, campus feed otherwise ──
           if (_isRouting && _routeResult != null)
-            DirectionsPanel(
-              route: _routeResult!,
-              destinationName: _routeDestinationName ?? 'Destination',
-              onCancel: _cancelDirections,
-              onSizeChanged: (size) {
-                if (mounted) setState(() => _sheetSize = size);
-              },
+            Positioned.fill(
+              child: DirectionsPanel(
+                route: _routeResult!,
+                destinationName: _routeDestinationName ?? 'Destination',
+                onCancel: _cancelDirections,
+                onSizeChanged: (size) {
+                  if (mounted) setState(() => _sheetSize = size);
+                },
+              ),
             )
           else
-            CampusBottomSheet(
-              key: _bottomSheetKey,
-              events: _events,
-              buildings: _buildings,
-              isLoading: _isLoading,
-              onEventTap: _showEventDetails,
-              onBuildingTap: (building) {
-                // Focus the map on the building
-                _mapController.move(LatLng(building.latitude, building.longitude), 18);
-                // Collapse the sheet so they can see the map
-                _bottomSheetKey.currentState?.snapTo(0.12);
-              },
-              onRefresh: _loadData,
-              onSizeChanged: (size) {
-                if (mounted) setState(() => _sheetSize = size);
-              },
-              onNavigateTap: () {
-                _searchController.openView();
-              },
-              onEventsTap: () {
-                setState(() => _activeFilter = 'Events');
-                if (_sheetSize < 0.2) {
-                  _bottomSheetKey.currentState?.snapTo(0.42);
-                }
-              },
-              onBuildingsTap: () {
-                setState(() => _activeFilter = 'All');
-                if (_sheetSize < 0.2) {
-                  _bottomSheetKey.currentState?.snapTo(0.42);
-                }
-              },
-              onAboutTap: () {
-                showDialog(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    title: const Text('CampuSetu'),
-                    content: const Text('Built for Galgotias University.\n\nNavigate seamlessly across campus, find events in real time, and map out the easiest paths to your destination.'),
-                    actions: [
-                      TextButton(onPressed: () {
-                        Navigator.pop(ctx);
-                        _checkForUpdates(true);
-                      }, child: const Text('Check for Updates')),
-                      TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
-                    ],
-                  ),
-                );
-              },
+            Positioned.fill(
+              child: CampusBottomSheet(
+                key: _bottomSheetKey,
+                events: _events,
+                buildings: _buildings,
+                isLoading: _isLoading,
+                onEventTap: _showEventDetails,
+                onBuildingTap: (building) {
+                  // Focus the map on the building
+                  _mapController.move(LatLng(building.latitude, building.longitude), 18);
+                  // Collapse the sheet so they can see the map
+                  _bottomSheetKey.currentState?.snapTo(0.12);
+                },
+                onRefresh: _loadData,
+                onSizeChanged: (size) {
+                  if (mounted) setState(() => _sheetSize = size);
+                },
+                onNavigateTap: () {
+                  _searchController.openView();
+                },
+                onEventsTap: () {
+                  setState(() => _activeFilter = 'Events');
+                  if (_sheetSize < 0.2) {
+                    _bottomSheetKey.currentState?.snapTo(0.42);
+                  }
+                },
+                onBuildingsTap: () {
+                  setState(() => _activeFilter = 'All');
+                  if (_sheetSize < 0.2) {
+                    _bottomSheetKey.currentState?.snapTo(0.42);
+                  }
+                },
+                onAboutTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text('CampuSetu'),
+                      content: const Text('Built for Galgotias University.\n\nNavigate seamlessly across campus, find events in real time, and map out the easiest paths to your destination.'),
+                      actions: [
+                        TextButton(onPressed: () {
+                          Navigator.pop(ctx);
+                          _checkForUpdates(true);
+                        }, child: const Text('Check for Updates')),
+                        TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
         ],
       );
