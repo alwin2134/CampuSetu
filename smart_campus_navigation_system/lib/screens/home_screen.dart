@@ -15,6 +15,7 @@ import '../models/campus_node.dart';
 import '../models/campus_edge.dart';
 import '../services/supabase_service.dart';
 import '../services/routing_service.dart';
+import '../services/update_service.dart';
 import '../theme.dart';
 import 'admin_map_screen.dart';
 import '../widgets/event_details_sheet.dart';
@@ -79,6 +80,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.initState();
     _loadData();
     _initLocation();
+    _checkForUpdates(false);
     
     // Listen to device compass for map rotation
     _compassSubscription = FlutterCompass.events?.listen((event) {
@@ -228,6 +230,118 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       debugPrint("Error loading data: $e");
     }
   }
+
+  // ── Auto-Updater ────────────────────────────────────────────────────────
+  Future<void> _checkForUpdates(bool manualCheck) async {
+    if (manualCheck) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Checking for updates...')),
+      );
+    }
+    
+    final updateInfo = await UpdateService.checkForUpdate();
+    
+    if (!mounted) return;
+    
+    if (updateInfo.hasUpdate && updateInfo.downloadUrl != null) {
+      _showUpdateDialog(updateInfo);
+    } else if (manualCheck) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Your app is up to date!')),
+      );
+    }
+  }
+
+  void _showUpdateDialog(UpdateInfo updateInfo) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Update Available'),
+        content: Text('A new version (${updateInfo.versionName}) of CampuSetu is available.\n\n${updateInfo.releaseNotes ?? "Bug fixes and improvements."}'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Later'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _startUpdateDownload(updateInfo.downloadUrl!);
+            },
+            child: const Text('Download Now'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _startUpdateDownload(String url) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        return StreamBuilder(
+          stream: UpdateService.downloadAndInstallUpdate(url),
+          builder: (context, snapshot) {
+            if (snapshot.hasError) {
+              return AlertDialog(
+                title: const Text('Update Failed'),
+                content: Text('Error: ${snapshot.error}'),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))
+                ],
+              );
+            }
+            if (!snapshot.hasData) {
+              return const AlertDialog(
+                title: Text('Downloading Update'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 16),
+                    Text('Starting download...'),
+                  ],
+                ),
+              );
+            }
+            
+            final event = snapshot.data!;
+            if (event.status == OtaStatus.DOWNLOADING) {
+              return AlertDialog(
+                title: const Text('Downloading Update'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    LinearProgressIndicator(
+                      value: event.value != null ? (double.tryParse(event.value!) ?? 0) / 100 : null,
+                    ),
+                    const SizedBox(height: 16),
+                    Text('${event.value}% Downloaded'),
+                  ],
+                ),
+              );
+            } else if (event.status == OtaStatus.INSTALLING) {
+              return const AlertDialog(
+                title: Text('Installing'),
+                content: Text('Please wait while the update is being installed...'),
+              );
+            }
+            
+            return AlertDialog(
+              title: const Text('Update'),
+              content: Text('Status: ${event.status.name}'),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
 
   String get _mapTilerUrl {
     final apiKey = dotenv.env['MAPTILER_API_KEY'] ?? '';
@@ -418,6 +532,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       title: const Text('CampuSetu'),
                       content: const Text('Built for Galgotias University.\n\nNavigate seamlessly across campus, find events in real time, and map out the easiest paths to your destination.'),
                       actions: [
+                        TextButton(onPressed: () {
+                          Navigator.pop(ctx);
+                          _checkForUpdates(true);
+                        }, child: const Text('Check for Updates')),
                         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
                       ],
                     ),
@@ -697,6 +815,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     title: const Text('CampuSetu'),
                     content: const Text('Built for Galgotias University.\n\nNavigate seamlessly across campus, find events in real time, and map out the easiest paths to your destination.'),
                     actions: [
+                      TextButton(onPressed: () {
+                        Navigator.pop(ctx);
+                        _checkForUpdates(true);
+                      }, child: const Text('Check for Updates')),
                       TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
                     ],
                   ),

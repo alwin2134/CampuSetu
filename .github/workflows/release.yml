@@ -1,0 +1,54 @@
+name: Build and Release APK
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0' # Use a stable flutter version
+          channel: 'stable'
+
+      - name: Get dependencies
+        working-directory: ./smart_campus_navigation_system
+        run: flutter pub get
+
+      - name: Build APK
+        working-directory: ./smart_campus_navigation_system
+        # We append the GitHub run number as the build number so the app knows when there's an update
+        run: flutter build apk --release --build-number=${{ github.run_number }}
+
+      - name: Extract version from pubspec.yaml
+        id: extract_version
+        working-directory: ./smart_campus_navigation_system
+        run: |
+          version=$(grep '^version: ' pubspec.yaml | cut -d ' ' -f 2 | cut -d '+' -f 1)
+          echo "VERSION=$version" >> $GITHUB_ENV
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ env.VERSION }}+${{ github.run_number }}
+          name: Release v${{ env.VERSION }} (Build ${{ github.run_number }})
+          draft: false
+          prerelease: false
+          files: smart_campus_navigation_system/build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
