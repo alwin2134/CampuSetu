@@ -53,7 +53,6 @@ dependencies:
   permission_handler: ^11.3.1
   vibration: ^3.1.8
 dev_dependencies:
-  url_launcher: ^6.3.0
   flutter_test:
     sdk: flutter
 
