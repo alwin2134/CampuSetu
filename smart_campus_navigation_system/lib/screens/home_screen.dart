@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:vibration/vibration.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:geolocator/geolocator.dart';
@@ -375,8 +375,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Expanded(
                   flex: 2,
                   child: FilledButton.icon(
-                    onPressed: () {
+                    onPressed: () async {
                       Vibration.vibrate(duration: 50);
+                      if (defaultTargetPlatform == TargetPlatform.android) {
+                        if (!await Permission.requestInstallPackages.isGranted) {
+                          await Permission.requestInstallPackages.request();
+                        }
+                      }
+                      if (!ctx.mounted) return;
                       Navigator.pop(ctx);
                       _startUpdateDownload(updateInfo.downloadUrl!);
                     },
