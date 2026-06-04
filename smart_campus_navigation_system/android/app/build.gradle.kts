@@ -1,11 +1,15 @@
 import java.io.FileInputStream
 import java.util.Properties
 
+// Load key.properties if it exists (local dev), otherwise fall back to env vars (CI)
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
 if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
+
+fun prop(key: String, envKey: String): String? =
+    keystoreProperties[key] as String? ?: System.getenv(envKey)
 
 plugins {
     id("com.android.application")
@@ -37,10 +41,11 @@ android {
 
     signingConfigs {
         create("release") {
-            keyAlias = keystoreProperties["keyAlias"] as String?
-            keyPassword = keystoreProperties["keyPassword"] as String?
-            storeFile = keystoreProperties["storeFile"]?.let { file(it as String) }
-            storePassword = keystoreProperties["storePassword"] as String?
+            keyAlias     = prop("keyAlias",     "KEY_ALIAS")
+            keyPassword  = prop("keyPassword",  "KEY_PASSWORD")
+            storePassword= prop("storePassword","STORE_PASSWORD")
+            val sf = prop("storeFile", "KEYSTORE_PATH")
+            if (sf != null) storeFile = file(sf)
         }
     }
 
