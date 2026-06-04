@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:vibration/vibration.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -428,10 +430,16 @@ class _AdminMapScreenState extends State<AdminMapScreen> {
         title: const Text('Delete Waypoint?'),
         content: const Text('This will also remove all road segments connected to this waypoint.'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () {
+            Vibration.vibrate(duration: 50);
+            Navigator.pop(ctx, false);
+          }, child: const Text('Cancel')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.danger),
-            onPressed: () => Navigator.pop(ctx, true),
+            onPressed: () {
+              Vibration.vibrate(duration: 50);
+              Navigator.pop(ctx, true);
+            },
             child: const Text('Delete', style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -460,10 +468,16 @@ class _AdminMapScreenState extends State<AdminMapScreen> {
         title: Text('Delete ${item.category.label}?'),
         content: Text('Are you sure you want to delete "${item.name}"?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () {
+            Vibration.vibrate(duration: 50);
+            Navigator.pop(ctx, false);
+          }, child: const Text('Cancel')),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppTheme.danger),
-            onPressed: () => Navigator.pop(ctx, true),
+            onPressed: () {
+              Vibration.vibrate(duration: 50);
+              Navigator.pop(ctx, true);
+            },
             child: const Text('Delete', style: TextStyle(color: Colors.white)),
           ),
         ],
@@ -610,7 +624,10 @@ class _AdminMapScreenState extends State<AdminMapScreen> {
                   if (_adminMode == AdminMode.place || _adminMode == AdminMode.map)
                     FloatingActionButton(
                       heroTag: 'add_place',
-                      onPressed: _isLocating ? null : _onAddPlace,
+                      onPressed: _isLocating ? null : () {
+                        Vibration.vibrate(duration: 50);
+                        _onAddPlace();
+                      },
                       backgroundColor: AppTheme.white,
                       foregroundColor: AppTheme.primary,
                       tooltip: 'Add Place',
@@ -620,7 +637,10 @@ class _AdminMapScreenState extends State<AdminMapScreen> {
                   if (_adminMode == AdminMode.recordPath || _adminMode == AdminMode.map)
                     FloatingActionButton(
                       heroTag: 'drop_node',
-                      onPressed: _isLocating ? null : _onDropNode,
+                      onPressed: _isLocating ? null : () {
+                        Vibration.vibrate(duration: 50);
+                        _onDropNode();
+                      },
                       backgroundColor: AppTheme.primary,
                       foregroundColor: AppTheme.white,
                       tooltip: 'Drop Node',
@@ -1104,7 +1124,10 @@ class _AddPlaceSheetState extends State<_AddPlaceSheet> {
                             boxShadow: [BoxShadow(color: _category.color.withValues(alpha: 0.35), blurRadius: 16, offset: const Offset(0, 5))],
                           ),
                           child: ElevatedButton.icon(
-                            onPressed: _isSaving ? null : _submit,
+                            onPressed: _isSaving ? null : () {
+                              Vibration.vibrate(duration: 50);
+                              _submit();
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.transparent,
                               shadowColor: Colors.transparent,
@@ -1165,7 +1188,10 @@ class _HeaderIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        Vibration.vibrate(duration: 50);
+        onTap();
+      },
       child: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
@@ -1242,7 +1268,10 @@ class _ModeToolbar extends StatelessWidget {
             final active = current == mode;
             final color = mode == AdminMode.delete ? AppTheme.danger : AppTheme.primary;
             return GestureDetector(
-              onTap: () => onSelect(mode),
+              onTap: () {
+                Vibration.vibrate(duration: 50);
+                onSelect(mode);
+              },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),

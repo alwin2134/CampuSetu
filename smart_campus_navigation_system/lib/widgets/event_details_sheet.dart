@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vibration/vibration.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
@@ -130,6 +131,7 @@ class EventDetailsSheet extends StatelessWidget {
                     // Copy coords
                     GestureDetector(
                       onTap: () {
+                        Vibration.vibrate(duration: 50);
                         Clipboard.setData(ClipboardData(
                           text: '${event.latitude}, ${event.longitude}',
                         ));
@@ -189,7 +191,10 @@ class EventDetailsSheet extends StatelessWidget {
                       boxShadow: AppTheme.shadowPrimary,
                     ),
                     child: ElevatedButton.icon(
-                      onPressed: onDirectionsTap,
+                      onPressed: () {
+                        Vibration.vibrate(duration: 50);
+                        onDirectionsTap();
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,

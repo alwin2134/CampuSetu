@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:vibration/vibration.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import '../models/event.dart';
@@ -94,7 +96,10 @@ class CampusBottomSheetState extends State<CampusBottomSheet> {
           scrollController: scrollController,
           isDraggableSheet: true,
           isExpanded: _isExpanded,
-          onHeaderTap: () => snapTo(_isExpanded ? _midSize : _maxSize),
+          onHeaderTap: () {
+            Vibration.vibrate(duration: 50);
+            snapTo(_isExpanded ? _midSize : _maxSize);
+          },
           events: widget.events,
           buildings: widget.buildings,
           isLoading: widget.isLoading,
@@ -188,7 +193,10 @@ class _CampusFeedPanelState extends State<CampusFeedPanel> {
             SliverToBoxAdapter(
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: widget.onHeaderTap,
+                onTap: () {
+                  Vibration.vibrate(duration: 50);
+                  if (widget.onHeaderTap != null) widget.onHeaderTap!();
+                },
                 child: _SheetHeader(isExpanded: widget.isExpanded),
               ),
             )
@@ -242,7 +250,10 @@ class _CampusFeedPanelState extends State<CampusFeedPanel> {
                   const Spacer(),
                   if (_activeTab == 'events')
                     GestureDetector(
-                      onTap: widget.onRefresh,
+                      onTap: () {
+                        Vibration.vibrate(duration: 50);
+                        widget.onRefresh();
+                      },
                       child: const Icon(Icons.refresh_rounded, color: AppTheme.ink500, size: 20),
                     ),
                 ],
@@ -267,7 +278,10 @@ class _CampusFeedPanelState extends State<CampusFeedPanel> {
                   (context, index) => _EventCard(
                     event: widget.events[index],
                     index: index,
-                    onTap: () => widget.onEventTap(widget.events[index]),
+                    onTap: () {
+                      Vibration.vibrate(duration: 50);
+                      widget.onEventTap(widget.events[index]);
+                    },
                   ),
                   childCount: widget.events.length,
                 ),
@@ -293,7 +307,10 @@ class _CampusFeedPanelState extends State<CampusFeedPanel> {
                   (context, index) => _BuildingCard(
                     building: widget.buildings[index],
                     index: index,
-                    onTap: () => widget.onBuildingTap(widget.buildings[index]),
+                    onTap: () {
+                      Vibration.vibrate(duration: 50);
+                      widget.onBuildingTap(widget.buildings[index]);
+                    },
                   ),
                   childCount: widget.buildings.length,
                 ),
@@ -463,7 +480,10 @@ class _QuickActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        Vibration.vibrate(duration: 50);
+        if (onTap != null) onTap!();
+      },
       behavior: HitTestBehavior.opaque,
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -514,7 +534,10 @@ class _EventCard extends StatelessWidget {
     final isUpcoming = hasTime && event.eventTime!.isAfter(DateTime.now());
 
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        Vibration.vibrate(duration: 50);
+        onTap();
+      },
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         decoration: BoxDecoration(
@@ -725,7 +748,10 @@ class _BuildingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        Vibration.vibrate(duration: 50);
+        onTap();
+      },
       child: Container(
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         decoration: BoxDecoration(

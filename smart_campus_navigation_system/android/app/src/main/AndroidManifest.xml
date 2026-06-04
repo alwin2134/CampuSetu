@@ -64,4 +64,7 @@
 
     <!-- Required for auto-updater -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <!-- Required for Haptic Feedback -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 </manifest>

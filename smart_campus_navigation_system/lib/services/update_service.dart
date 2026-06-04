@@ -25,6 +25,10 @@ class UpdateService {
 
   static Future<UpdateInfo> checkForUpdate() async {
     try {
+      if (kDebugMode) {
+        return UpdateInfo(hasUpdate: false);
+      }
+
       if (!kIsWeb && defaultTargetPlatform != TargetPlatform.android) {
         return UpdateInfo(hasUpdate: false);
       }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:vibration/vibration.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../models/route_result.dart';
 import '../theme.dart';
@@ -75,7 +77,10 @@ class _DirectionsPanelState extends State<DirectionsPanel> {
           scrollController: scrollController,
           isDraggableSheet: true,
           isExpanded: _isExpanded,
-          onHeaderTap: () => _snapTo(_isExpanded ? _midSize : _maxSize),
+          onHeaderTap: () {
+            Vibration.vibrate(duration: 50);
+            _snapTo(_isExpanded ? _midSize : _maxSize);
+          },
           route: widget.route,
           destinationName: widget.destinationName,
           originName: widget.originName,
@@ -133,7 +138,10 @@ class DirectionsFeedPanel extends StatelessWidget {
             SliverToBoxAdapter(
               child: GestureDetector(
                 behavior: HitTestBehavior.opaque,
-                onTap: onHeaderTap,
+                onTap: () {
+                  Vibration.vibrate(duration: 50);
+                  if (onHeaderTap != null) onHeaderTap!();
+                },
                 child: _DirectionHeader(
                   route: route,
                   destinationName: destinationName,
@@ -333,7 +341,10 @@ class _DirectionHeader extends StatelessWidget {
                   const Spacer(),
                   // Cancel
                   GestureDetector(
-                    onTap: onCancel,
+                    onTap: () {
+                      Vibration.vibrate(duration: 50);
+                      onCancel();
+                    },
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(

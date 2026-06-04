@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:vibration/vibration.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:geolocator/geolocator.dart';
@@ -356,7 +359,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: () => Navigator.pop(ctx),
+                    onPressed: () {
+                      Vibration.vibrate(duration: 50);
+                      Navigator.pop(ctx);
+                    },
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       side: const BorderSide(color: AppTheme.ink300),
@@ -370,6 +376,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   flex: 2,
                   child: FilledButton.icon(
                     onPressed: () {
+                      Vibration.vibrate(duration: 50);
                       Navigator.pop(ctx);
                       _startUpdateDownload(updateInfo.downloadUrl!);
                     },
@@ -491,19 +498,46 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     ),
                   ),
 
-                  if (isError) ...[
+                  if (isError || isDone) ...[
                     const SizedBox(height: 20),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.danger,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
+                    Row(
+                      children: [
+                        if (isError)
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Vibration.vibrate(duration: 50);
+                                Navigator.pop(ctx);
+                              },
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: AppTheme.danger),
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              ),
+                              child: const Text('Close', style: TextStyle(color: AppTheme.danger, fontWeight: FontWeight.w700)),
+                            ),
+                          ),
+                        if (isError) const SizedBox(width: 12),
+                        Expanded(
+                          flex: 2,
+                          child: FilledButton.icon(
+                            onPressed: () async {
+                              Vibration.vibrate(duration: 50);
+                              final uri = Uri.parse(url);
+                              if (await canLaunchUrl(uri)) {
+                                await launchUrl(uri, mode: LaunchMode.externalApplication);
+                              }
+                            },
+                            style: FilledButton.styleFrom(
+                              backgroundColor: AppTheme.primary,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            icon: const Icon(Icons.open_in_browser_rounded, size: 18),
+                            child: const Text('Download in Browser', style: TextStyle(fontWeight: FontWeight.w700)),
+                          ),
                         ),
-                        child: const Text('Close', style: TextStyle(fontWeight: FontWeight.w700)),
-                      ),
+                      ],
                     ),
                   ],
                 ],
@@ -1281,7 +1315,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     required VoidCallback onTap,
   }) {
     return ListTile(
-      onTap: onTap,
+      onTap: () {
+        Vibration.vibrate(duration: 50);
+        onTap();
+      },
       leading: Container(
         width: 38,
         height: 38,
@@ -1306,6 +1343,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       child: InkWell(
         customBorder: const CircleBorder(),
         onTap: () async {
+          Vibration.vibrate(duration: 50);
           await Navigator.push(context, _fadeRoute(const AdminMapScreen()));
           _loadData();
         },
@@ -1338,6 +1376,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           final active = _activeFilter == filter;
           return GestureDetector(
             onTap: () {
+              Vibration.vibrate(duration: 50);
               setState(() => _activeFilter = filter);
               if (_sheetSize < 0.1) {
                 _bottomSheetKey.currentState?.snapTo(0.42);
@@ -1475,7 +1514,10 @@ class _MiniFAB extends StatelessWidget {
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
-        onTap: onTap,
+        onTap: () {
+          Vibration.vibrate(duration: 50);
+          if (onTap != null) onTap!();
+        },
         child: Container(
           width: 50,
           height: 50,
