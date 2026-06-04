@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:vibration/vibration.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -541,7 +542,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                             icon: const Icon(Icons.open_in_browser_rounded, size: 18),
-                            child: const Text('Download in Browser', style: TextStyle(fontWeight: FontWeight.w700)),
+                            label: const Text('Download in Browser', style: TextStyle(fontWeight: FontWeight.w700)),
                           ),
                         ),
                       ],
